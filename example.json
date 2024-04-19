@@ -1,0 +1,23 @@
+[
+    {
+        "id": "1",
+        "name": "Hasan Issa",
+        "age": 17
+    },
+    {
+        "id": "2",
+        "name": "Mohamad Kanso",
+        "age": 22
+    },
+    {
+        "id": "3",
+        "name": "Hanin Matar",
+        "age": 19,
+        "address": "Beirut"
+    },
+    {
+        "id": "4",
+        "name": "Mohamad Ali",
+        "age": 20
+    }
+]
