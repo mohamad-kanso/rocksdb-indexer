@@ -1,9 +1,9 @@
 use std::{collections::HashMap, sync::Arc};
 use actix_web::{get, web::{self, get, put, resource, scope, Data}, App, HttpRequest, HttpResponse, HttpServer};
-use rocksdb_indexer::create_database;
 use rocksdb::DB;
 use serde_json::Value;
 use qstring::QString;
+use tokio;
 
 #[get("/search")]
 async fn search_index (req: HttpRequest, db: Data<Arc<DB>>) -> HttpResponse{
@@ -12,21 +12,25 @@ async fn search_index (req: HttpRequest, db: Data<Arc<DB>>) -> HttpResponse{
     let q = qs.into_pairs();
     let mut json_map: Vec<HashMap<String,Value>> = Vec::new();
     let search = format!("S.{}.{}", q.get(0).unwrap().0,q.get(0).unwrap().1);
+    let mut keys = vec![];
     let iter = db.prefix_iterator(search.as_bytes());
     for item in iter{
         let (key,_value) = item.unwrap();
         if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
             let k_str: String = String::from_utf8(key.to_vec()).unwrap();
             let key_st: String = k_str.split('.').last().unwrap().to_string();
-            let json_entry = get_entry(key_st, &db);
-            json_map.push(json_entry);
+            keys.push(key_st);
         }
+    }
+    for key in keys {
+        let j = tokio::join!(get_entry(key, &db));
+        json_map.push(j.0)
     }
     let json_entries = serde_json::to_string(&json_map).unwrap();
     HttpResponse::Ok().content_type("application/json").body(json_entries)
 }
 
-fn get_entry (key: String, db: &Data<Arc<DB>>) -> HashMap<String,Value>{
+async fn get_entry (key: String, db: &Data<Arc<DB>>) -> HashMap<String,Value>{
     let mut json_one_entry: HashMap<String, Value> = HashMap::new();
         let p_iter = db.prefix_iterator(format!("R.{}",key).as_bytes());
         for item in p_iter {
@@ -73,7 +77,7 @@ async fn get_entries(db: Data<Arc<DB>>) -> HttpResponse{
                 continue;
             }
             else{
-                let json_one_entry = get_entry(key_st.clone(), &db);
+                let json_one_entry = get_entry(key_st.clone(), &db).await;
                 processed_keys.push(key_st.clone());
                 json_map.push(json_one_entry);
             }
@@ -81,6 +85,7 @@ async fn get_entries(db: Data<Arc<DB>>) -> HttpResponse{
     }
 
     let json_entry: String = serde_json::to_string(&json_map).unwrap();
+    println!("Getting entries");
     HttpResponse::Ok().content_type("application/json").body(json_entry)
 }
 
@@ -123,14 +128,14 @@ async fn put_entry(db: Data<Arc<DB>>, body: web::Json::<Value>) -> HttpResponse{
             }        
         }
     }
-    let j = get_entry(key, &db);
+    let j = get_entry(key, &db).await;
     HttpResponse::Ok().json(j)
 }
 
 #[allow(deprecated)]
-#[actix_rt::main]
+#[tokio::main]
 async fn main() -> std::io::Result<()>{
-    let db = create_database("./database");
+    let db = rocksdb::DB::open_default("./data").unwrap();
     let db = Arc::new(db);
 
     HttpServer::new(move || {
