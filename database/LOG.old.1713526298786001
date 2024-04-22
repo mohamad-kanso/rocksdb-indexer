@@ -1,0 +1,296 @@
+2024/04/19-14:30:44.524244 2bac RocksDB version: 8.10.0
+2024/04/19-14:30:44.525420 2bac Compile date 2023-12-15 13:01:14
+2024/04/19-14:30:44.525470 2bac DB SUMMARY
+2024/04/19-14:30:44.525510 2bac Host name (Env):  DESKTOP-G1637J7
+2024/04/19-14:30:44.525531 2bac DB Session ID:  14WZRUJAV61HASLUIJMH
+2024/04/19-14:30:44.527144 2bac CURRENT file:  CURRENT
+2024/04/19-14:30:44.527172 2bac IDENTITY file:  IDENTITY
+2024/04/19-14:30:44.527305 2bac MANIFEST file:  MANIFEST-000079 size: 326 Bytes
+2024/04/19-14:30:44.527344 2bac SST files in ./database dir, Total Num: 2, files: 000074.sst 000077.sst 
+2024/04/19-14:30:44.527367 2bac Write Ahead Log file in ./database: 000078.log size: 934 ; 
+2024/04/19-14:30:44.527389 2bac                         Options.error_if_exists: 0
+2024/04/19-14:30:44.527625 2bac                       Options.create_if_missing: 1
+2024/04/19-14:30:44.527640 2bac                         Options.paranoid_checks: 1
+2024/04/19-14:30:44.527649 2bac             Options.flush_verify_memtable_count: 1
+2024/04/19-14:30:44.527658 2bac          Options.compaction_verify_record_count: 1
+2024/04/19-14:30:44.527664 2bac                               Options.track_and_verify_wals_in_manifest: 0
+2024/04/19-14:30:44.527671 2bac        Options.verify_sst_unique_id_in_manifest: 1
+2024/04/19-14:30:44.527677 2bac                                     Options.env: 0000015073B95F70
+2024/04/19-14:30:44.527684 2bac                                      Options.fs: WinFS
+2024/04/19-14:30:44.527691 2bac                                Options.info_log: 0000015073B7B7E0
+2024/04/19-14:30:44.527698 2bac                Options.max_file_opening_threads: 16
+2024/04/19-14:30:44.527704 2bac                              Options.statistics: 0000000000000000
+2024/04/19-14:30:44.527711 2bac                               Options.use_fsync: 0
+2024/04/19-14:30:44.527717 2bac                       Options.max_log_file_size: 0
+2024/04/19-14:30:44.527724 2bac                  Options.max_manifest_file_size: 1073741824
+2024/04/19-14:30:44.527730 2bac                   Options.log_file_time_to_roll: 0
+2024/04/19-14:30:44.527737 2bac                       Options.keep_log_file_num: 1000
+2024/04/19-14:30:44.527743 2bac                    Options.recycle_log_file_num: 0
+2024/04/19-14:30:44.527749 2bac                         Options.allow_fallocate: 1
+2024/04/19-14:30:44.527756 2bac                        Options.allow_mmap_reads: 0
+2024/04/19-14:30:44.527762 2bac                       Options.allow_mmap_writes: 0
+2024/04/19-14:30:44.527768 2bac                        Options.use_direct_reads: 0
+2024/04/19-14:30:44.527774 2bac                        Options.use_direct_io_for_flush_and_compaction: 0
+2024/04/19-14:30:44.527781 2bac          Options.create_missing_column_families: 1
+2024/04/19-14:30:44.527787 2bac                              Options.db_log_dir: 
+2024/04/19-14:30:44.527794 2bac                                 Options.wal_dir: 
+2024/04/19-14:30:44.527800 2bac                Options.table_cache_numshardbits: 6
+2024/04/19-14:30:44.527806 2bac                         Options.WAL_ttl_seconds: 0
+2024/04/19-14:30:44.527813 2bac                       Options.WAL_size_limit_MB: 0
+2024/04/19-14:30:44.527819 2bac                        Options.max_write_batch_group_size_bytes: 1048576
+2024/04/19-14:30:44.527826 2bac             Options.manifest_preallocation_size: 4194304
+2024/04/19-14:30:44.527832 2bac                     Options.is_fd_close_on_exec: 1
+2024/04/19-14:30:44.527839 2bac                   Options.advise_random_on_open: 1
+2024/04/19-14:30:44.527845 2bac                    Options.db_write_buffer_size: 0
+2024/04/19-14:30:44.527851 2bac                    Options.write_buffer_manager: 0000015073B27B20
+2024/04/19-14:30:44.527858 2bac         Options.access_hint_on_compaction_start: 1
+2024/04/19-14:30:44.527864 2bac           Options.random_access_max_buffer_size: 1048576
+2024/04/19-14:30:44.527870 2bac                      Options.use_adaptive_mutex: 0
+2024/04/19-14:30:44.527877 2bac                            Options.rate_limiter: 0000000000000000
+2024/04/19-14:30:44.527894 2bac     Options.sst_file_manager.rate_bytes_per_sec: 0
+2024/04/19-14:30:44.527940 2bac                       Options.wal_recovery_mode: 2
+2024/04/19-14:30:44.527950 2bac                  Options.enable_thread_tracking: 0
+2024/04/19-14:30:44.527957 2bac                  Options.enable_pipelined_write: 0
+2024/04/19-14:30:44.527963 2bac                  Options.unordered_write: 0
+2024/04/19-14:30:44.527969 2bac         Options.allow_concurrent_memtable_write: 1
+2024/04/19-14:30:44.527976 2bac      Options.enable_write_thread_adaptive_yield: 1
+2024/04/19-14:30:44.527982 2bac             Options.write_thread_max_yield_usec: 100
+2024/04/19-14:30:44.527989 2bac            Options.write_thread_slow_yield_usec: 3
+2024/04/19-14:30:44.527995 2bac                               Options.row_cache: None
+2024/04/19-14:30:44.528001 2bac                              Options.wal_filter: None
+2024/04/19-14:30:44.528008 2bac             Options.avoid_flush_during_recovery: 0
+2024/04/19-14:30:44.528014 2bac             Options.allow_ingest_behind: 0
+2024/04/19-14:30:44.528020 2bac             Options.two_write_queues: 0
+2024/04/19-14:30:44.528026 2bac             Options.manual_wal_flush: 0
+2024/04/19-14:30:44.528033 2bac             Options.wal_compression: 0
+2024/04/19-14:30:44.528039 2bac             Options.atomic_flush: 0
+2024/04/19-14:30:44.528045 2bac             Options.avoid_unnecessary_blocking_io: 0
+2024/04/19-14:30:44.528051 2bac                 Options.persist_stats_to_disk: 0
+2024/04/19-14:30:44.528058 2bac                 Options.write_dbid_to_manifest: 0
+2024/04/19-14:30:44.528064 2bac                 Options.log_readahead_size: 0
+2024/04/19-14:30:44.528071 2bac                 Options.file_checksum_gen_factory: Unknown
+2024/04/19-14:30:44.528077 2bac                 Options.best_efforts_recovery: 0
+2024/04/19-14:30:44.528083 2bac                Options.max_bgerror_resume_count: 2147483647
+2024/04/19-14:30:44.528090 2bac            Options.bgerror_resume_retry_interval: 1000000
+2024/04/19-14:30:44.528096 2bac             Options.allow_data_in_errors: 0
+2024/04/19-14:30:44.528103 2bac             Options.db_host_id: __hostname__
+2024/04/19-14:30:44.528109 2bac             Options.enforce_single_del_contracts: true
+2024/04/19-14:30:44.528116 2bac             Options.max_background_jobs: 2
+2024/04/19-14:30:44.528122 2bac             Options.max_background_compactions: -1
+2024/04/19-14:30:44.528132 2bac             Options.max_subcompactions: 1
+2024/04/19-14:30:44.528139 2bac             Options.avoid_flush_during_shutdown: 0
+2024/04/19-14:30:44.528145 2bac           Options.writable_file_max_buffer_size: 1048576
+2024/04/19-14:30:44.528151 2bac             Options.delayed_write_rate : 16777216
+2024/04/19-14:30:44.528158 2bac             Options.max_total_wal_size: 0
+2024/04/19-14:30:44.528164 2bac             Options.delete_obsolete_files_period_micros: 21600000000
+2024/04/19-14:30:44.528171 2bac                   Options.stats_dump_period_sec: 600
+2024/04/19-14:30:44.528177 2bac                 Options.stats_persist_period_sec: 600
+2024/04/19-14:30:44.528184 2bac                 Options.stats_history_buffer_size: 1048576
+2024/04/19-14:30:44.528190 2bac                          Options.max_open_files: -1
+2024/04/19-14:30:44.528196 2bac                          Options.bytes_per_sync: 0
+2024/04/19-14:30:44.528203 2bac                      Options.wal_bytes_per_sync: 0
+2024/04/19-14:30:44.528209 2bac                   Options.strict_bytes_per_sync: 0
+2024/04/19-14:30:44.528215 2bac       Options.compaction_readahead_size: 2097152
+2024/04/19-14:30:44.528222 2bac                  Options.max_background_flushes: -1
+2024/04/19-14:30:44.528228 2bac Options.daily_offpeak_time_utc: 
+2024/04/19-14:30:44.528234 2bac Compression algorithms supported:
+2024/04/19-14:30:44.528251 2bac 	kZSTD supported: 1
+2024/04/19-14:30:44.528259 2bac 	kSnappyCompression supported: 1
+2024/04/19-14:30:44.528266 2bac 	kBZip2Compression supported: 1
+2024/04/19-14:30:44.528273 2bac 	kZlibCompression supported: 1
+2024/04/19-14:30:44.528280 2bac 	kLZ4Compression supported: 1
+2024/04/19-14:30:44.528323 2bac 	kXpressCompression supported: 0
+2024/04/19-14:30:44.528333 2bac 	kLZ4HCCompression supported: 1
+2024/04/19-14:30:44.528348 2bac 	kZSTDNotFinalCompression supported: 1
+2024/04/19-14:30:44.528360 2bac Fast CRC32 supported: Not supported on x86
+2024/04/19-14:30:44.528368 2bac DMutex implementation: std::mutex
+2024/04/19-14:30:44.529879 2bac [:5942] Recovering from manifest file: ./database/MANIFEST-000079
+2024/04/19-14:30:44.530626 2bac [column_family.cc:618] --------------- Options for column family [default]:
+2024/04/19-14:30:44.530641 2bac               Options.comparator: leveldb.BytewiseComparator
+2024/04/19-14:30:44.530649 2bac           Options.merge_operator: None
+2024/04/19-14:30:44.530655 2bac        Options.compaction_filter: None
+2024/04/19-14:30:44.530662 2bac        Options.compaction_filter_factory: None
+2024/04/19-14:30:44.530668 2bac  Options.sst_partitioner_factory: None
+2024/04/19-14:30:44.530675 2bac         Options.memtable_factory: SkipListFactory
+2024/04/19-14:30:44.530681 2bac            Options.table_factory: BlockBasedTable
+2024/04/19-14:30:44.530751 2bac            table_factory options:   flush_block_policy_factory: FlushBlockBySizePolicyFactory (0000015073B99770)
+  cache_index_and_filter_blocks: 0
+  cache_index_and_filter_blocks_with_high_priority: 1
+  pin_l0_filter_and_index_blocks_in_cache: 0
+  pin_top_level_index_and_filter: 1
+  index_type: 0
+  data_block_index_type: 0
+  index_shortening: 1
+  data_block_hash_table_util_ratio: 0.750000
+  checksum: 4
+  no_block_cache: 0
+  block_cache: 0000015073B9BB80
+  block_cache_name: LRUCache
+  block_cache_options:
+    capacity : 33554432
+    num_shard_bits : 6
+    strict_capacity_limit : 0
+    memory_allocator : None
+    high_pri_pool_ratio: 0.500
+    low_pri_pool_ratio: 0.000
+  persistent_cache: 0000000000000000
+  block_size: 4096
+  block_size_deviation: 10
+  block_restart_interval: 16
+  index_block_restart_interval: 1
+  metadata_block_size: 4096
+  partition_filters: 0
+  use_delta_encoding: 1
+  filter_policy: nullptr
+  whole_key_filtering: 1
+  verify_compression: 0
+  read_amp_bytes_per_bit: 0
+  format_version: 5
+  enable_index_compression: 1
+  block_align: 0
+  max_auto_readahead_size: 262144
+  prepopulate_block_cache: 0
+  initial_auto_readahead_size: 8192
+  num_file_reads_for_auto_readahead: 2
+2024/04/19-14:30:44.530761 2bac        Options.write_buffer_size: 67108864
+2024/04/19-14:30:44.530768 2bac  Options.max_write_buffer_number: 2
+2024/04/19-14:30:44.530775 2bac          Options.compression: Snappy
+2024/04/19-14:30:44.530782 2bac                  Options.bottommost_compression: Disabled
+2024/04/19-14:30:44.530788 2bac       Options.prefix_extractor: nullptr
+2024/04/19-14:30:44.530794 2bac   Options.memtable_insert_with_hint_prefix_extractor: nullptr
+2024/04/19-14:30:44.530801 2bac             Options.num_levels: 7
+2024/04/19-14:30:44.530815 2bac        Options.min_write_buffer_number_to_merge: 1
+2024/04/19-14:30:44.530822 2bac     Options.max_write_buffer_number_to_maintain: 0
+2024/04/19-14:30:44.530829 2bac     Options.max_write_buffer_size_to_maintain: 0
+2024/04/19-14:30:44.530835 2bac            Options.bottommost_compression_opts.window_bits: -14
+2024/04/19-14:30:44.530846 2bac                  Options.bottommost_compression_opts.level: 32767
+2024/04/19-14:30:44.530863 2bac               Options.bottommost_compression_opts.strategy: 0
+2024/04/19-14:30:44.530870 2bac         Options.bottommost_compression_opts.max_dict_bytes: 0
+2024/04/19-14:30:44.530877 2bac         Options.bottommost_compression_opts.zstd_max_train_bytes: 0
+2024/04/19-14:30:44.530884 2bac         Options.bottommost_compression_opts.parallel_threads: 1
+2024/04/19-14:30:44.530891 2bac                  Options.bottommost_compression_opts.enabled: false
+2024/04/19-14:30:44.530898 2bac         Options.bottommost_compression_opts.max_dict_buffer_bytes: 0
+2024/04/19-14:30:44.530905 2bac         Options.bottommost_compression_opts.use_zstd_dict_trainer: true
+2024/04/19-14:30:44.530911 2bac            Options.compression_opts.window_bits: -14
+2024/04/19-14:30:44.530921 2bac                  Options.compression_opts.level: 32767
+2024/04/19-14:30:44.530930 2bac               Options.compression_opts.strategy: 0
+2024/04/19-14:30:44.530937 2bac         Options.compression_opts.max_dict_bytes: 0
+2024/04/19-14:30:44.530953 2bac         Options.compression_opts.zstd_max_train_bytes: 0
+2024/04/19-14:30:44.530960 2bac         Options.compression_opts.use_zstd_dict_trainer: true
+2024/04/19-14:30:44.530966 2bac         Options.compression_opts.parallel_threads: 1
+2024/04/19-14:30:44.530973 2bac                  Options.compression_opts.enabled: false
+2024/04/19-14:30:44.530979 2bac         Options.compression_opts.max_dict_buffer_bytes: 0
+2024/04/19-14:30:44.530985 2bac      Options.level0_file_num_compaction_trigger: 4
+2024/04/19-14:30:44.530992 2bac          Options.level0_slowdown_writes_trigger: 20
+2024/04/19-14:30:44.530998 2bac              Options.level0_stop_writes_trigger: 36
+2024/04/19-14:30:44.531004 2bac                   Options.target_file_size_base: 67108864
+2024/04/19-14:30:44.531011 2bac             Options.target_file_size_multiplier: 1
+2024/04/19-14:30:44.531017 2bac                Options.max_bytes_for_level_base: 268435456
+2024/04/19-14:30:44.531023 2bac Options.level_compaction_dynamic_level_bytes: 1
+2024/04/19-14:30:44.531029 2bac          Options.max_bytes_for_level_multiplier: 10.000000
+2024/04/19-14:30:44.531037 2bac Options.max_bytes_for_level_multiplier_addtl[0]: 1
+2024/04/19-14:30:44.531044 2bac Options.max_bytes_for_level_multiplier_addtl[1]: 1
+2024/04/19-14:30:44.531050 2bac Options.max_bytes_for_level_multiplier_addtl[2]: 1
+2024/04/19-14:30:44.531057 2bac Options.max_bytes_for_level_multiplier_addtl[3]: 1
+2024/04/19-14:30:44.531063 2bac Options.max_bytes_for_level_multiplier_addtl[4]: 1
+2024/04/19-14:30:44.531069 2bac Options.max_bytes_for_level_multiplier_addtl[5]: 1
+2024/04/19-14:30:44.531075 2bac Options.max_bytes_for_level_multiplier_addtl[6]: 1
+2024/04/19-14:30:44.531082 2bac       Options.max_sequential_skip_in_iterations: 8
+2024/04/19-14:30:44.531088 2bac                    Options.max_compaction_bytes: 1677721600
+2024/04/19-14:30:44.531094 2bac   Options.ignore_max_compaction_bytes_for_input: true
+2024/04/19-14:30:44.531101 2bac                        Options.arena_block_size: 1048576
+2024/04/19-14:30:44.531107 2bac   Options.soft_pending_compaction_bytes_limit: 68719476736
+2024/04/19-14:30:44.531113 2bac   Options.hard_pending_compaction_bytes_limit: 274877906944
+2024/04/19-14:30:44.531120 2bac                Options.disable_auto_compactions: 0
+2024/04/19-14:30:44.531129 2bac                        Options.compaction_style: kCompactionStyleLevel
+2024/04/19-14:30:44.531138 2bac                          Options.compaction_pri: kMinOverlappingRatio
+2024/04/19-14:30:44.531145 2bac Options.compaction_options_universal.size_ratio: 1
+2024/04/19-14:30:44.531151 2bac Options.compaction_options_universal.min_merge_width: 2
+2024/04/19-14:30:44.531157 2bac Options.compaction_options_universal.max_merge_width: 4294967295
+2024/04/19-14:30:44.531164 2bac Options.compaction_options_universal.max_size_amplification_percent: 200
+2024/04/19-14:30:44.531170 2bac Options.compaction_options_universal.compression_size_percent: -1
+2024/04/19-14:30:44.531178 2bac Options.compaction_options_universal.stop_style: kCompactionStopStyleTotalSize
+2024/04/19-14:30:44.531185 2bac Options.compaction_options_fifo.max_table_files_size: 1073741824
+2024/04/19-14:30:44.531191 2bac Options.compaction_options_fifo.allow_compaction: 0
+2024/04/19-14:30:44.531201 2bac                   Options.table_properties_collectors: 
+2024/04/19-14:30:44.531208 2bac                   Options.inplace_update_support: 0
+2024/04/19-14:30:44.531214 2bac                 Options.inplace_update_num_locks: 10000
+2024/04/19-14:30:44.531221 2bac               Options.memtable_prefix_bloom_size_ratio: 0.000000
+2024/04/19-14:30:44.531228 2bac               Options.memtable_whole_key_filtering: 0
+2024/04/19-14:30:44.531234 2bac   Options.memtable_huge_page_size: 0
+2024/04/19-14:30:44.531240 2bac                           Options.bloom_locality: 0
+2024/04/19-14:30:44.531293 2bac                    Options.max_successive_merges: 0
+2024/04/19-14:30:44.531304 2bac                Options.optimize_filters_for_hits: 0
+2024/04/19-14:30:44.531310 2bac                Options.paranoid_file_checks: 0
+2024/04/19-14:30:44.531317 2bac                Options.force_consistency_checks: 1
+2024/04/19-14:30:44.531323 2bac                Options.report_bg_io_stats: 0
+2024/04/19-14:30:44.531329 2bac                               Options.ttl: 2592000
+2024/04/19-14:30:44.531336 2bac          Options.periodic_compaction_seconds: 0
+2024/04/19-14:30:44.531343 2bac                        Options.default_temperature: kUnknown
+2024/04/19-14:30:44.531350 2bac  Options.preclude_last_level_data_seconds: 0
+2024/04/19-14:30:44.531356 2bac    Options.preserve_internal_time_seconds: 0
+2024/04/19-14:30:44.531362 2bac                       Options.enable_blob_files: false
+2024/04/19-14:30:44.531369 2bac                           Options.min_blob_size: 0
+2024/04/19-14:30:44.531375 2bac                          Options.blob_file_size: 268435456
+2024/04/19-14:30:44.531382 2bac                   Options.blob_compression_type: NoCompression
+2024/04/19-14:30:44.531389 2bac          Options.enable_blob_garbage_collection: false
+2024/04/19-14:30:44.531395 2bac      Options.blob_garbage_collection_age_cutoff: 0.250000
+2024/04/19-14:30:44.531403 2bac Options.blob_garbage_collection_force_threshold: 1.000000
+2024/04/19-14:30:44.531411 2bac          Options.blob_compaction_readahead_size: 0
+2024/04/19-14:30:44.531417 2bac                Options.blob_file_starting_level: 0
+2024/04/19-14:30:44.531423 2bac         Options.experimental_mempurge_threshold: 0.000000
+2024/04/19-14:30:44.531430 2bac            Options.memtable_max_range_deletions: 0
+2024/04/19-14:30:44.535248 2bac [ %llu, next_file_number is %llu, last_sequence is %llu, log_number is %llu,prev_log_number is %llu,max_column_family is %u,min_log_number_to_keep is %llu
+:5993] Recovered from manifest file:./database/MANIFEST-000079 succeeded,manifest_file_number is 79, next_file_number is 81, last_sequence is 312, log_number is 71,prev_log_number is 0,max_column_family is 0,min_log_number_to_keep is 71
+2024/04/19-14:30:44.535273 2bac [te MANIFEST file in :6002] Column family [default] (ID 0), log number is 71
+2024/04/19-14:30:44.535806 2bac [w Db, wal_dir contains existing log file: :646] DB ID: b1287029-fe1e-11ee-9394-685d43a4a901
+2024/04/19-14:30:44.539277 2bac EVENT_LOG_v1 {"time_micros": 1713526244539230, "job": 1, "event": "recovery_started", "wal_files": [78]}
+2024/04/19-14:30:44.539313 2bac [ too large:1145] Recovering log #78 mode 2
+2024/04/19-14:30:44.553194 2bac EVENT_LOG_v1 {"time_micros": 1713526244552930, "cf_name": "default", "job": 1, "event": "table_file_creation", "file_number": 82, "file_size": 1364, "file_checksum": "", "file_checksum_func_name": "Unknown", "smallest_seqno": 313, "largest_seqno": 336, "table_properties": {"data_size": 365, "index_size": 38, "index_partitions": 0, "top_level_index_size": 0, "index_key_is_user_key": 1, "index_value_is_delta_encoded": 1, "filter_size": 0, "raw_key_size": 478, "raw_average_key_size": 19, "raw_value_size": 120, "raw_average_value_size": 5, "num_data_blocks": 1, "num_entries": 24, "num_filter_entries": 0, "num_deletions": 0, "num_merge_operands": 0, "num_range_deletions": 0, "format_version": 0, "fixed_key_len": 0, "filter_policy": "", "column_family_name": "default", "column_family_id": 0, "comparator": "leveldb.BytewiseComparator", "user_defined_timestamps_persisted": 1, "merge_operator": "nullptr", "prefix_extractor_name": "nullptr", "property_collectors": "[]", "compression": "Snappy", "compression_options": "window_bits=-14; level=32767; strategy=0; max_dict_bytes=0; zstd_max_train_bytes=0; enabled=0; max_dict_buffer_bytes=0; use_zstd_dict_trainer=1; ", "creation_time": 1713526244, "oldest_key_time": 0, "file_creation_time": 0, "slow_compression_estimated_data_size": 0, "fast_compression_estimated_data_size": 0, "db_id": "b1287029-fe1e-11ee-9394-685d43a4a901", "db_session_id": "14WZRUJAV61HASLUIJMH", "orig_file_number": 82, "seqno_to_time_mapping": "N/A"}}
+2024/04/19-14:30:44.555984 2bac EVENT_LOG_v1 {"time_micros": 1713526244555956, "job": 1, "event": "recovery_finished"}
+2024/04/19-14:30:44.557217 2bac [ksdb/db/version_set.cc:5439] Creating manifest 84
+2024/04/19-14:30:44.595010 2bac [_trash_size %llu max_trash_db_ratio %lf:77] Deleted file ./database/000078.log immediately, rate_bytes_per_sec 0, total_trash_size 0 max_trash_db_ratio 0.250000
+2024/04/19-14:30:44.595527 2bac [:Open() failed --- Unable to persist Options file:2157] SstFileManager instance 0000015073BB65F0
+2024/04/19-14:30:44.598104 2bac DB pointer 0000015073BACAC0
+2024/04/19-14:30:44.599427 2e0c [:1141] %s:1140] ------- DUMPING STATS -------
+2024/04/19-14:30:44.599476 2e0c [ATS -------:1141] 
+** DB Stats **
+Uptime(secs): 0.1 total, 0.1 interval
+Cumulative writes: 1 writes, 1 keys, 1 commit groups, 1.0 writes per commit group, ingest: 0.00 GB, 0.00 MB/s
+Cumulative WAL: 0 writes, 0 syncs, 0.00 writes per sync, written: 0.00 GB, 0.00 MB/s
+Cumulative stall: 00:00:0.000 H:M:S, 0.0 percent
+Interval writes: 1 writes, 1 keys, 1 commit groups, 1.0 writes per commit group, ingest: 0.00 MB, 0.00 MB/s
+Interval WAL: 0 writes, 0 syncs, 0.00 writes per sync, written: 0.00 GB, 0.00 MB/s
+Interval stall: 00:00:0.000 H:M:S, 0.0 percent
+Write Stall (count): write-buffer-manager-limit-stops: 0
+
+** Compaction Stats [default] **
+Level    Files   Size     Score Read(GB)  Rn(GB) Rnp1(GB) Write(GB) Wnew(GB) Moved(GB) W-Amp Rd(MB/s) Wr(MB/s) Comp(sec) CompMergeCPU(sec) Comp(cnt) Avg(sec) KeyIn KeyDrop Rblob(GB) Wblob(GB)
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  L0      2/0    2.67 KB   0.5      0.0     0.0      0.0       0.0      0.0       0.0   1.0      0.0      0.1      0.01              0.00         1    0.013       0      0       0.0       0.0
+  L6      1/0    1.28 KB   0.0      0.0     0.0      0.0       0.0      0.0       0.0   0.0      0.0      0.0      0.00              0.00         0    0.000       0      0       0.0       0.0
+ Sum      3/0    3.94 KB   0.0      0.0     0.0      0.0       0.0      0.0       0.0   1.0      0.0      0.1      0.01              0.00         1    0.013       0      0       0.0       0.0
+ Int      0/0    0.00 KB   0.0      0.0     0.0      0.0       0.0      0.0       0.0   1.0      0.0      0.1      0.01              0.00         1    0.013       0      0       0.0       0.0
+
+** Compaction Stats [default] **
+Priority    Files   Size     Score Read(GB)  Rn(GB) Rnp1(GB) Write(GB) Wnew(GB) Moved(GB) W-Amp Rd(MB/s) Wr(MB/s) Comp(sec) CompMergeCPU(sec) Comp(cnt) Avg(sec) KeyIn KeyDrop Rblob(GB) Wblob(GB)
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+User      0/0    0.00 KB   0.0      0.0     0.0      0.0       0.0      0.0       0.0   0.0      0.0      0.1      0.01              0.00         1    0.013       0      0       0.0       0.0
+
+Blob file count: 0, total size: 0.0 GB, garbage size: 0.0 GB, space amp: 0.0
+
+Uptime(secs): 0.1 total, 0.1 interval
+Flush(GB): cumulative 0.000, interval 0.000
+AddFile(GB): cumulative 0.000, interval 0.000
+AddFile(Total Files): cumulative 0, interval 0
+AddFile(L0 Files): cumulative 0, interval 0
+AddFile(Keys): cumulative 0, interval 0
+Cumulative compaction: 0.00 GB write, 0.02 MB/s write, 0.00 GB read, 0.00 MB/s read, 0.0 seconds
+Interval compaction: 0.00 GB write, 0.02 MB/s write, 0.00 GB read, 0.00 MB/s read, 0.0 seconds
+Write Stall (count): cf-l0-file-count-limit-delays-with-ongoing-compaction: 0, cf-l0-file-count-limit-stops-with-ongoing-compaction: 0, l0-file-count-limit-delays: 0, l0-file-count-limit-stops: 0, memtable-limit-delays: 0, memtable-limit-stops: 0, pending-compaction-bytes-delays: 0, pending-compaction-bytes-stops: 0, total-delays: 0, total-stops: 0
+Block cache LRUCache@0000015073B9BB80#6836 capacity: 32.00 MB seed: 528815399 usage: 0.08 KB table_size: 1024 occupancy: 1 collections: 1 last_copies: 0 last_secs: 0.00032 secs_since: 0
+Block cache entry stats(count,size,portion): Misc(1,0.00 KB,0%)
+
+** File Read Latency Histogram By Level [default] **
+2024/04/19-14:31:08.173921 2bac [h unreleased snapshot.:486] Shutdown: canceling all background work
+2024/04/19-14:31:08.186564 2bac [noring error %s:667] Shutdown complete
