@@ -35,8 +35,25 @@ fn get_entry (key: String, db: &Data<Arc<DB>>) -> HashMap<String,Value>{
                 let k_str = String::from_utf8(k.to_vec()).unwrap();
                 let parts: Vec<&str> = k_str.split('.').collect();
                 let column = parts.get(2).unwrap().to_string();
-                let value_str = String::from_utf8_lossy(&v).to_string();
-                json_one_entry.insert(column, serde_json::Value::String(value_str));
+                let kind = parts.get(3).unwrap();
+                match kind {
+                    &"s" => {
+                        let value_str = String::from_utf8_lossy(&v).to_string();
+                        json_one_entry.insert(column, serde_json::Value::String(value_str));
+                    },
+                    &"n" => {
+                        let value_n: f64 = f64::from_ne_bytes(v.into_vec().try_into().unwrap());
+                        json_one_entry.insert(column, value_n.into());
+                    },
+                    &"b" => {
+                        let value_b = match String::from_utf8(v.to_vec()).unwrap() == "true"{
+                            true => {true},
+                            false => {false}
+                        };
+                        json_one_entry.insert(column, serde_json::Value::Bool(value_b));
+                    },
+                    _ => {println!("undefined type")}
+                };
             }
         }
     json_one_entry
@@ -51,26 +68,15 @@ async fn get_entries(db: Data<Arc<DB>>) -> HttpResponse{
         if String::from_utf8(k.to_vec()).unwrap().starts_with("R."){
             let k_str = String::from_utf8(k.to_vec()).unwrap();
             let parts: Vec<&str> = k_str.split('.').collect();
-            let mut json_one_entry = HashMap::new();
             let key_st = parts.get(1).unwrap().to_string();
-            let p_iter = db.prefix_iterator(format!("R.{}",key_st).as_bytes());
             if processed_keys.contains(&key_st){
                 continue;
             }
             else{
-                for item in p_iter {
-                    let (k,v) = item.unwrap();
-                    if String::from_utf8(k.to_vec()).unwrap().starts_with(&format!("R.{}",key_st)){
-                        let k_str = String::from_utf8(k.to_vec()).unwrap();
-                        let parts: Vec<&str> = k_str.split('.').collect();
-                        let column = parts.get(2).unwrap().to_string();
-                        let value_str = String::from_utf8_lossy(&v).to_string();
-                        json_one_entry.insert(column, serde_json::Value::String(value_str));
-                    }
-                    processed_keys.push(key_st.clone());
-                }
+                let json_one_entry = get_entry(key_st.clone(), &db);
+                processed_keys.push(key_st.clone());
+                json_map.push(json_one_entry);
             }
-            json_map.push(json_one_entry);
         }
     }
 
@@ -79,53 +85,45 @@ async fn get_entries(db: Data<Arc<DB>>) -> HttpResponse{
 }
 
 async fn put_entry(db: Data<Arc<DB>>, body: web::Json::<Value>) -> HttpResponse{
-    let mut identifier = String::new();
+    let mut key = String::new();
     if let Value::Object(map) = &body.0{
-        for (key,value) in map.into_iter(){
-            if key == "identifier" {identifier = value.to_string();}
-            println!("{identifier}");
-        }
+        key = map.get("key").unwrap().to_string();
         println!("{}",&body.0);
-        for (k,v) in map.into_iter(){
-            println!("{k}");
-            if k != "identifier"{
-                if let Value::Object(object) = v{
-                    for (obj_k,obj_v) in object.into_iter(){
-                        println!("{obj_k}");
-                        let db_key = format!("R.{}.{}",identifier,obj_k.to_string());
-                        match obj_v{
-                            Value::Null => {
-                                println!("got null value");
-                                db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
-                            },
-                            Value::Bool(b) => {
-                                println!("got a bool");
-                                db.put(db_key.as_bytes(), b.to_string()).expect("failed to put bool");
-                                db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),identifier).as_bytes(),"".as_bytes())
-                                    .expect("failed to put reverse bool index");
-                            },
-                            Value::Number(nb) => {
-                                println!("got a number");
-                                db.put(db_key.as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
-                                    .expect("failed to save number to db");
-                                db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),identifier)
-                                    .as_bytes(),"".as_bytes())
-                                    .expect("failed to put reverse number index");
-                            },
-                            Value::String(str) => {
-                                println!("got string");
-                                db.put(db_key.as_bytes(), str.to_string()).expect("failed to save string to db");
-                                db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),identifier).as_bytes(),"".as_bytes())
-                                    .expect("failed to put reverse string index");
-                            },
-                            _ => {}
-                        };
-                    }
-                }        
-            }
+        if let Value::Object(object) =  map.get("value").unwrap(){
+            for (obj_k,obj_v) in object.into_iter(){
+                println!("{obj_k}");
+                let db_key = format!("R.{}.{}",key,obj_k.to_string());
+                match obj_v{
+                    Value::Null => {
+                        println!("got null value");
+                        db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
+                    },
+                    Value::Bool(b) => {
+                        println!("got a bool");
+                        db.put(format!("{}.b",db_key).as_bytes(), b.to_string()).expect("failed to put bool");
+                        db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key).as_bytes(),"".as_bytes())
+                            .expect("failed to put reverse bool index");
+                    },
+                    Value::Number(nb) => {
+                        println!("got a number");
+                        db.put(format!("{}.n",db_key).as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
+                            .expect("failed to save number to db");
+                        db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),key)
+                            .as_bytes(),"".as_bytes())
+                            .expect("failed to put reverse number index");
+                    },
+                    Value::String(str) => {
+                        println!("got string");
+                        db.put(format!("{}.s",db_key).as_bytes(), str.to_string()).expect("failed to save string to db");
+                        db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"".as_bytes())
+                            .expect("failed to put reverse string index");
+                    },
+                    _ => {}
+                };
+            }        
         }
     }
-    let j = get_entry(identifier, &db);
+    let j = get_entry(key, &db);
     HttpResponse::Ok().json(j)
 }
 
