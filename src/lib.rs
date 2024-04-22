@@ -48,9 +48,9 @@ pub fn create_database(path:&str) -> DB {
    users.insert(3, u4);
    //Row indexing
    for item in users{
-      data.put(format!("R.{}.id",item.id),item.id.clone()).unwrap();
-      data.put(format!("R.{}.name",item.id),item.name.clone()).unwrap();
-      data.put(format!("R.{}.address",item.id),item.address.clone()).unwrap();
+      data.put(format!("R.{}.id.s",item.id),item.id.clone()).unwrap();
+      data.put(format!("R.{}.name.s",item.id),item.name.clone()).unwrap();
+      data.put(format!("R.{}.address.s",item.id),item.address.clone()).unwrap();
       data.put(format!("C.name.{}",item.id),item.name.clone()).unwrap();
       data.put(format!("S.name.{}.{}",item.name,item.id),"").unwrap();
       data.put(format!("S.address.{}.{}",item.address,item.id),"").unwrap();
