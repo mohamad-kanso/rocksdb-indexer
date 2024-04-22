@@ -48,30 +48,17 @@ pub fn create_database(path:&str) -> DB {
    users.insert(3, u4);
    //Row indexing
    for item in users{
-       data.put(format!("R.{}.id",item.id),item.id.clone()).unwrap();
-       data.put(format!("R.{}.name",item.id),item.name.clone()).unwrap();
-       data.put(format!("R.{}.address",item.id),item.address.clone()).unwrap();
-       data.put(format!("C.name.{}",item.id),item.name.clone()).unwrap();
-       data.put(format!("S.name.{}.{}",item.name,item.id),"").unwrap();
-       data.put(format!("S.address.{}.{}",item.address,item.id),"").unwrap();
-       //println!("{}\t{}\t{}",item.id,item.name,item.age);
+      data.put(format!("R.{}.id",item.id),item.id.clone()).unwrap();
+      data.put(format!("R.{}.name",item.id),item.name.clone()).unwrap();
+      data.put(format!("R.{}.address",item.id),item.address.clone()).unwrap();
+      data.put(format!("C.name.{}",item.id),item.name.clone()).unwrap();
+      data.put(format!("S.name.{}.{}",item.name,item.id),"").unwrap();
+      data.put(format!("S.address.{}.{}",item.address,item.id),"").unwrap();
+      //println!("{}\t{}\t{}",item.id,item.name,item.age);
    }
    data
 }
-// pub fn display_ages(data: &DB){
-//    let age_iter = data.iterator(rocksdb::IteratorMode::Start);
-//    for item in age_iter{
-//       let (key,_value) = item.unwrap();
-//       if String::from_utf8(key.to_vec()).unwrap().starts_with("C.age"){
-//          let retrieved_age_bytes = data
-//             .get(key)
-//             .unwrap().unwrap();
-//          println!("{}",i32::from_ne_bytes(retrieved_age_bytes
-//             .as_slice().try_into().unwrap()));
-//       }
-//    }
-//    println!();
-// }
+
 pub fn display_names(data: &DB){
    let name_iter = data.iterator(rocksdb::IteratorMode::Start);
    for item in name_iter {
