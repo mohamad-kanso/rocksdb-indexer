@@ -91,8 +91,26 @@ async fn get_entries(db: Data<Arc<DB>>) -> HttpResponse{
 
 async fn put_entry(db: Data<Arc<DB>>, body: web::Json::<Value>) -> HttpResponse{
     let mut key = String::new();
+    let mut exist: bool= false;
     if let Value::Object(map) = &body.0{
         key = map.get("key").unwrap().to_string();
+        let iter = db.prefix_iterator(format!("R.{}",key));
+        for item in iter {
+            let (k,_v) = item.unwrap();
+            if String::from_utf8(k.to_vec()).unwrap().starts_with(&format!("R.{}",key)){
+                exist = true;
+            }
+        }
+        if exist {
+            let iter = db.prefix_iterator(format!("S."));
+            for item in iter{
+                let (k,_v) = item.unwrap();
+                let k_str = String::from_utf8(k.to_vec()).unwrap();
+                if k_str.ends_with(&key){
+                    let _ = db.delete(k);
+                }
+            }
+        }
         db.put(format!("R.{}.key.k",key).as_bytes(), key.as_bytes()).unwrap();
         println!("{}",&body.0);
         if let Value::Object(object) =  map.get("value").unwrap(){
