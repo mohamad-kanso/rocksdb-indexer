@@ -1,5 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
-use actix_web::{get, web::{self, get, put, resource, scope, Data}, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{delete, get, web::{self, get, put, resource, scope, Data, Path}, App, HttpRequest, HttpResponse, HttpServer};
 use rocksdb::DB;
 use serde_json::Value;
 use qstring::QString;
@@ -32,34 +32,34 @@ async fn search_index (req: HttpRequest, db: Data<Arc<DB>>) -> HttpResponse{
 
 async fn get_entry (key: String, db: &Data<Arc<DB>>) -> HashMap<String,Value>{
     let mut json_one_entry: HashMap<String, Value> = HashMap::new();
-        let p_iter = db.prefix_iterator(format!("R.{}",key).as_bytes());
-        for item in p_iter {
-            let (k,v) = item.unwrap();
-            if String::from_utf8(k.to_vec()).unwrap().starts_with(&format!("R.{}",key)){
-                let k_str = String::from_utf8(k.to_vec()).unwrap();
-                let parts: Vec<&str> = k_str.split('.').collect();
-                let column = parts.get(2).unwrap().to_string();
-                let kind = parts.get(3).unwrap();
-                match kind {
-                    &"s" => {
-                        let value_str = String::from_utf8_lossy(&v).to_string();
-                        json_one_entry.insert(column, serde_json::Value::String(value_str));
-                    },
-                    &"n" => {
-                        let value_n: f64 = f64::from_ne_bytes(v.into_vec().try_into().unwrap());
-                        json_one_entry.insert(column, value_n.into());
-                    },
-                    &"b" => {
-                        let value_b = match String::from_utf8(v.to_vec()).unwrap() == "true"{
-                            true => {true},
-                            false => {false}
-                        };
-                        json_one_entry.insert(column, serde_json::Value::Bool(value_b));
-                    },
-                    _ => {println!("undefined type")}
-                };
-            }
+    let p_iter = db.prefix_iterator(format!("R.{}",key).as_bytes());
+    for item in p_iter {
+        let (k,v) = item.unwrap();
+        if String::from_utf8(k.to_vec()).unwrap().starts_with(&format!("R.{}",key)){
+            let k_str = String::from_utf8(k.to_vec()).unwrap();
+            let parts: Vec<&str> = k_str.split('.').collect();
+            let column = parts.get(2).unwrap().to_string();
+            let kind = parts.get(3).unwrap();
+            match kind {
+                &"s" | &"k" => {
+                    let value_str = String::from_utf8_lossy(&v).to_string();
+                    json_one_entry.insert(column, serde_json::Value::String(value_str));
+                },
+                &"n" => {
+                    let value_n: f64 = f64::from_ne_bytes(v.into_vec().try_into().unwrap());
+                    json_one_entry.insert(column, value_n.into());
+                },
+                &"b" => {
+                    let value_b = match String::from_utf8(v.to_vec()).unwrap() == "true"{
+                        true => {true},
+                        false => {false}
+                    };
+                    json_one_entry.insert(column, serde_json::Value::Bool(value_b));
+                },
+                _ => {println!("undefined type")}
+            };
         }
+    }
     json_one_entry
 }
 
@@ -93,6 +93,7 @@ async fn put_entry(db: Data<Arc<DB>>, body: web::Json::<Value>) -> HttpResponse{
     let mut key = String::new();
     if let Value::Object(map) = &body.0{
         key = map.get("key").unwrap().to_string();
+        db.put(format!("R.{}.key.k",key).as_bytes(), key.as_bytes()).unwrap();
         println!("{}",&body.0);
         if let Value::Object(object) =  map.get("value").unwrap(){
             for (obj_k,obj_v) in object.into_iter(){
@@ -132,6 +133,22 @@ async fn put_entry(db: Data<Arc<DB>>, body: web::Json::<Value>) -> HttpResponse{
     HttpResponse::Ok().json(j)
 }
 
+#[delete("/remove/{key}")]
+async fn delete_entry (key: Path<String>,db: Data<Arc<DB>>) -> HttpResponse{
+    let key = key.into_inner();
+    let del = format!("R.{}",key);
+    println!("{del}");
+    let iter = db.prefix_iterator(del.as_bytes());
+    for item in iter {
+        let (k,_v) = item.unwrap();
+        let k_str = String::from_utf8(k.to_vec()).unwrap();
+        if k_str.starts_with(&del) || k_str.ends_with(&key){
+            let _ = db.delete(k);
+        }
+    }
+    get_entries(db).await
+}
+
 #[allow(deprecated)]
 #[tokio::main]
 async fn main() -> std::io::Result<()>{
@@ -151,6 +168,7 @@ async fn main() -> std::io::Result<()>{
                 )
             )
             .service(search_index)
+            .service(delete_entry)
     })
     .bind("0.0.0.0:7878")?
     .run()
