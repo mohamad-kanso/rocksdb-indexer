@@ -13,18 +13,9 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
     let query_str = req.query_string();
     let qs = QString::from(query_str);
     let q = qs.into_pairs();
+    let (column,index) = q.get(0).unwrap().to_owned();
     let mut json_map: Vec<HashMap<String,Value>> = Vec::new();
-    let search = format!("S.{}.{}", q.get(0).unwrap().0,q.get(0).unwrap().1);
-    let mut keys = vec![];
-    let iter = data.db.prefix_iterator(search.as_bytes());
-    for item in iter{
-        let (key,_value) = item.unwrap();
-        if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
-            let k_str: String = String::from_utf8(key.to_vec()).unwrap();
-            let key_st: String = k_str.split('.').last().unwrap().to_string();
-            keys.push(key_st);
-        }
-    }
+    let keys = data.search(column,index);
     for key in keys {
         let j = data.get(key);
         json_map.push(j)

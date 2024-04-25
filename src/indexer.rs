@@ -9,6 +9,7 @@ pub trait INDFunction{
    fn get_all(&self) -> Vec<HashMap<String,Value>>;
    fn put(&self, body:Value) -> String;
    fn delete(&self, key:String);
+   fn search(&self, column:String, index:String) -> Vec<String>;
 }
 
 #[derive(Clone)]
@@ -148,5 +149,20 @@ impl INDFunction for Indexer{
             let _ = self.db.delete(k);
          }   
       }
+   }
+
+   fn search(&self, column:String, index:String) -> Vec<String> {
+      let search = format!("S.{}.{}", column, index);
+      let mut keys = vec![];
+      let iter = self.db.prefix_iterator(search.as_bytes());
+      for item in iter{
+          let (key,_value) = item.unwrap();
+          if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
+              let k_str: String = String::from_utf8(key.to_vec()).unwrap();
+              let key_st: String = k_str.split('.').last().unwrap().to_string();
+              keys.push(key_st);
+          }
+      }
+      keys
    }
 }
