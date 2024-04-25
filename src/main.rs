@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use actix_web::{delete, get, web::{self, get, put, resource, scope, Data, Path}, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{delete, get, put, web::{self, get, resource, scope, Data, Path}, App, HttpRequest, HttpResponse, HttpServer};
 use serde_json::Value;
 use qstring::QString;
 use tokio;
@@ -47,6 +47,7 @@ async fn get_entries(data: Data<Indexer>) -> HttpResponse{
     HttpResponse::Ok().content_type("application/json").body(json_entry)
 }
 
+#[put("/")]
 async fn put_entry(data: Data<Indexer>, body: web::Json::<Value>) -> HttpResponse{
     let body = body.into_inner();
     let key = data.put(body);
@@ -75,10 +76,9 @@ async fn main() -> std::io::Result<()>{
                 .service(
                     resource("/")
                         .route(get().to(get_entries))
-                        .route(put().to(put_entry))
-                        
                 )
             )
+            .service(put_entry)
             .service(search_index)
             .service(delete_entry)
             .service(get_by_key)
