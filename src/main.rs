@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 use actix_web::{delete, get, put, web::{self, get, resource, scope, Data, Path}, App, HttpRequest, HttpResponse, HttpServer};
+use rocksdb::DB;
 use serde_json::Value;
 use qstring::QString;
-use tokio;
-
 
 mod indexer;
 use crate::indexer::{INDFunction,Indexer};
@@ -28,13 +27,15 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
 async fn get_by_key (key:Path<String>, data: Data<Indexer>) -> HttpResponse{
     let key = key.into_inner();
     let j = data.get(key);
-    HttpResponse::Ok().json(j)
+    match j.is_empty(){
+        true => HttpResponse::NotFound().content_type("application/json").finish(),
+        false => HttpResponse::Ok().json(j)
+    }
 }
 
 async fn get_entries(data: Data<Indexer>) -> HttpResponse{
     let json_map = data.get_all();
     let json_entry: String = serde_json::to_string(&json_map).unwrap();
-    println!("Getting entries");
     HttpResponse::Ok().content_type("application/json").body(json_entry)
 }
 
@@ -57,11 +58,12 @@ async fn delete_entry (key: Path<String>,data: Data<Indexer>) -> HttpResponse{
 #[allow(deprecated)]
 #[tokio::main]
 async fn main() -> std::io::Result<()>{
-    let db: indexer::Indexer = indexer::INDFunction::init("./data");
+    let db=DB::open_default("./data").unwrap();
+    let data: indexer::Indexer = indexer::INDFunction::init(db);
 
     HttpServer::new(move || {
         App::new()
-            .data(db.clone())
+            .data(data.clone())
             .service(
                 scope("/api")
                 .service(

@@ -1,7 +1,6 @@
 {
     "key" : 1,
     "value":{
-        "address": "Baalbck",
         "name": "Ali Lamaa",
         "male": true,
         "age": 35

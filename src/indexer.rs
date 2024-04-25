@@ -4,7 +4,7 @@ use serde_json::Value;
 
 
 pub trait INDFunction{
-   fn init (file_path: &str) -> Self;
+   fn init (data: DB) -> Self;
    fn get(&self, key:String) -> HashMap<String,Value>;
    fn get_all(&self) -> Vec<HashMap<String,Value>>;
    fn put(&self, body:Value) -> String;
@@ -16,10 +16,10 @@ pub trait INDFunction{
 pub struct Indexer{
    pub db: Arc<DB>,
 }
-
+ 
 impl INDFunction for Indexer{
-   fn init (file_path: &str) -> Self {
-      Indexer { db: Arc::new(DB::open_default(file_path).unwrap()) }
+   fn init (data: DB) -> Self{
+      Indexer {db: Arc::new(data)}
    }
 
    fn get (&self, key:String) -> HashMap<String,Value>{
@@ -55,7 +55,7 @@ impl INDFunction for Indexer{
       }
       json_one_entry
    }
-
+   
    fn get_all(&self) -> Vec<HashMap<String,Value>> {
       let mut json_map:Vec<HashMap<String, Value>> = Vec::new();
       let iter = self.db.prefix_iterator(format!("R."));
@@ -156,13 +156,50 @@ impl INDFunction for Indexer{
       let mut keys = vec![];
       let iter = self.db.prefix_iterator(search.as_bytes());
       for item in iter{
-          let (key,_value) = item.unwrap();
-          if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
-              let k_str: String = String::from_utf8(key.to_vec()).unwrap();
-              let key_st: String = k_str.split('.').last().unwrap().to_string();
-              keys.push(key_st);
-          }
+         let (key,_value) = item.unwrap();
+         if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
+            let k_str: String = String::from_utf8(key.to_vec()).unwrap();
+            let key_st: String = k_str.split('.').last().unwrap().to_string();
+            keys.push(key_st);
+         }
       }
       keys
+   }
+}
+
+#[cfg(test)]
+mod tests{
+   use std::fs::File;
+
+   use crate::indexer;
+
+   use super::*;
+
+   fn initialize() -> DB{
+      let db = DB::open_default("./tmp").unwrap();
+      db
+   }
+
+   #[test]
+   fn putting(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let k = data.put(body);
+      let j = data.get(k);
+      assert!(!j.is_empty())
+   }
+
+   #[test]
+   fn deleting(){
+      let data:indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let k = data.put(body);
+      let j = data.get(k.clone());
+      assert!(!j.is_empty());
+      let _ = data.delete(k.clone());
+      let j = data.get(k);
+      assert!(j.is_empty());
    }
 }
