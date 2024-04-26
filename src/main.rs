@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 use actix_web::{delete, get, put, web::{self, get, resource, scope, Data, Path}, App, HttpRequest, HttpResponse, HttpServer};
+use rocksdb::DB;
 use serde_json::Value;
 use qstring::QString;
-use tokio;
-
 
 mod indexer;
-use crate::indexer::{INDFunction,Indexer};
+use crate::indexer::{INDFunction, IndexError, Indexer};
 
 #[get("/search")]
 async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
@@ -15,9 +14,9 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
     let q = qs.into_pairs();
     let (column,index) = q.get(0).unwrap().to_owned();
     let mut json_map: Vec<HashMap<String,Value>> = Vec::new();
-    let keys = data.search(column,index);
+    let keys = data.search(column,index).unwrap();
     for key in keys {
-        let j = data.get(key);
+        let j = data.get(key).unwrap();
         json_map.push(j)
     }
     let json_entries = serde_json::to_string(&json_map).unwrap();
@@ -27,23 +26,31 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
 #[get("/key/{key}")]
 async fn get_by_key (key:Path<String>, data: Data<Indexer>) -> HttpResponse{
     let key = key.into_inner();
-    let j = data.get(key);
-    HttpResponse::Ok().json(j)
+    match data.get(key){
+        Ok(j) => HttpResponse::Ok().json(j),
+        Err(IndexError::KeyNotFound) => HttpResponse::NotFound().content_type("application/json").finish(),
+        Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
+    }
 }
 
 async fn get_entries(data: Data<Indexer>) -> HttpResponse{
     let json_map = data.get_all();
     let json_entry: String = serde_json::to_string(&json_map).unwrap();
-    println!("Getting entries");
     HttpResponse::Ok().content_type("application/json").body(json_entry)
 }
 
 #[put("/")]
 async fn put_entry(data: Data<Indexer>, body: web::Json::<Value>) -> HttpResponse{
     let body = body.into_inner();
-    let key = data.put(body);
-    let j = data.get(key);
-    HttpResponse::Ok().json(j)
+    match data.put(body){
+        Ok(key) => {
+            match data.get(key){
+                Ok(j) => return HttpResponse::Ok().json(j),
+                _ => return HttpResponse::InternalServerError().content_type("application/json").finish()
+            };
+        }
+        Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
+    }
 }
 
 #[delete("/remove/{key}")]
@@ -57,11 +64,12 @@ async fn delete_entry (key: Path<String>,data: Data<Indexer>) -> HttpResponse{
 #[allow(deprecated)]
 #[tokio::main]
 async fn main() -> std::io::Result<()>{
-    let db: indexer::Indexer = indexer::INDFunction::init("./data");
+    let db=DB::open_default("./data").unwrap();
+    let data: indexer::Indexer = indexer::INDFunction::init(db);
 
     HttpServer::new(move || {
         App::new()
-            .data(db.clone())
+            .data(data.clone())
             .service(
                 scope("/api")
                 .service(

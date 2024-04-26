@@ -4,12 +4,12 @@ use serde_json::Value;
 
 
 pub trait INDFunction{
-   fn init (file_path: &str) -> Self;
-   fn get(&self, key:String) -> HashMap<String,Value>;
+   fn init (data: DB) -> Self;
+   fn get(&self, key:String) -> Result<HashMap<String,Value>,IndexError>;
    fn get_all(&self) -> Vec<HashMap<String,Value>>;
-   fn put(&self, body:Value) -> String;
+   fn put(&self, body:Value) -> Result<String,IndexError>;
    fn delete(&self, key:String);
-   fn search(&self, column:String, index:String) -> Vec<String>;
+   fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError>;
 }
 
 #[derive(Clone)]
@@ -17,12 +17,20 @@ pub struct Indexer{
    pub db: Arc<DB>,
 }
 
+#[derive(Debug,PartialEq)]
+pub enum IndexError {
+   EmptyJson,
+   KeyNotFound,
+   ValueNotFound,
+   IndexNotFound,
+}
+ 
 impl INDFunction for Indexer{
-   fn init (file_path: &str) -> Self {
-      Indexer { db: Arc::new(DB::open_default(file_path).unwrap()) }
+   fn init (data: DB) -> Self{
+      Indexer {db: Arc::new(data)}
    }
 
-   fn get (&self, key:String) -> HashMap<String,Value>{
+   fn get (&self, key:String) -> Result<HashMap<String,Value>,IndexError>{
       let index = format!("R.{}",key);
       let mut json_one_entry: HashMap<String,Value> = HashMap::new();
       let iter = self.db.prefix_iterator(index);
@@ -53,9 +61,12 @@ impl INDFunction for Indexer{
             };
          }
       }
-      json_one_entry
+      match json_one_entry.is_empty(){
+         true => {return Err(IndexError::KeyNotFound)},
+         false => {Ok(json_one_entry)}
+      }
    }
-
+   
    fn get_all(&self) -> Vec<HashMap<String,Value>> {
       let mut json_map:Vec<HashMap<String, Value>> = Vec::new();
       let iter = self.db.prefix_iterator(format!("R."));
@@ -70,7 +81,7 @@ impl INDFunction for Indexer{
                continue;
             }
             else{
-               let json_one_entry = self.get(key_st.clone());
+               let json_one_entry = self.get(key_st.clone()).unwrap();
                processed_keys.push(key_st.clone());
                json_map.push(json_one_entry);
             }
@@ -79,11 +90,18 @@ impl INDFunction for Indexer{
       json_map
    }
    
-   fn put(&self,body: Value) -> String {
+   fn put(&self,body: Value) -> Result<String,IndexError> {
       let mut key = String::new();
+      match body.to_string() == "{}"{
+         true => return Err(IndexError::EmptyJson),
+         false => {}
+      }
       let mut exist: bool= false;
       if let Value::Object(map) = body{
-         key = map.get("key").unwrap().to_string();
+         match map.get("key"){
+            Some(k) => {key = k.to_string();},
+            None => return Err(IndexError::KeyNotFound) 
+         }
          let iter = self.db.prefix_iterator(format!("R.{}",key));
          for item in iter {
             let (k,_v) = item.unwrap();
@@ -102,41 +120,44 @@ impl INDFunction for Indexer{
             }
          }
          self.db.put(format!("R.{}.key.k",key).as_bytes(), key.as_bytes()).unwrap();
-         if let Value::Object(object) =  map.get("value").unwrap(){
-            for (obj_k,obj_v) in object.into_iter(){
-               println!("{obj_k}");
-               let db_key = format!("R.{}.{}",key,obj_k.to_string());
-               match obj_v{
-                     Value::Null => {
-                        println!("got null value");
-                        self.db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
-                     },
-                     Value::Bool(b) => {
-                        println!("got a bool");
-                        self.db.put(format!("{}.b",db_key).as_bytes(), b.to_string()).expect("failed to put bool");
-                        self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key).as_bytes(),"".as_bytes())
-                           .expect("failed to put reverse bool index");
-                     },
-                     Value::Number(nb) => {
-                        println!("got a number");
-                        self.db.put(format!("{}.n",db_key).as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
-                           .expect("failed to save number to db");
-                        self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),key)
-                           .as_bytes(),"".as_bytes())
-                           .expect("failed to put reverse number index");
-                     },
-                     Value::String(str) => {
-                        println!("got string");
-                        self.db.put(format!("{}.s",db_key).as_bytes(), str.to_string()).expect("failed to save string to db");
-                        self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"".as_bytes())
-                           .expect("failed to put reverse string index");
-                     },
-                     _ => {}
-               };
-            }        
+         match map.get("value") {
+            Some(body) => if let Value::Object(object) = body{
+               for (obj_k,obj_v) in object.into_iter(){
+                  println!("{obj_k}");
+                  let db_key = format!("R.{}.{}",key,obj_k.to_string());
+                  match obj_v{
+                        Value::Null => {
+                           println!("got null value");
+                           self.db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
+                        },
+                        Value::Bool(b) => {
+                           println!("got a bool");
+                           self.db.put(format!("{}.b",db_key).as_bytes(), b.to_string()).expect("failed to put bool");
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key).as_bytes(),"".as_bytes())
+                              .expect("failed to put reverse bool index");
+                        },
+                        Value::Number(nb) => {
+                           println!("got a number");
+                           self.db.put(format!("{}.n",db_key).as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
+                              .expect("failed to save number to db");
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),key)
+                              .as_bytes(),"".as_bytes())
+                              .expect("failed to put reverse number index");
+                        },
+                        Value::String(str) => {
+                           println!("got string");
+                           self.db.put(format!("{}.s",db_key).as_bytes(), str.to_string()).expect("failed to save string to db");
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"".as_bytes())
+                              .expect("failed to put reverse string index");
+                        },
+                        _ => {}
+                  };
+               }
+            },
+            None => return Err(IndexError::ValueNotFound)
          }
       }
-      key
+      Ok(key)
    }
 
    fn delete(&self, key:String){
@@ -151,18 +172,113 @@ impl INDFunction for Indexer{
       }
    }
 
-   fn search(&self, column:String, index:String) -> Vec<String> {
+   fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError> {
       let search = format!("S.{}.{}", column, index);
       let mut keys = vec![];
       let iter = self.db.prefix_iterator(search.as_bytes());
       for item in iter{
-          let (key,_value) = item.unwrap();
-          if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
-              let k_str: String = String::from_utf8(key.to_vec()).unwrap();
-              let key_st: String = k_str.split('.').last().unwrap().to_string();
-              keys.push(key_st);
-          }
+         let (key,_value) = item.unwrap();
+         if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
+            let k_str: String = String::from_utf8(key.to_vec()).unwrap();
+            let key_st: String = k_str.split('.').last().unwrap().to_string();
+            keys.push(key_st);
+         }
       }
-      keys
+      match keys.is_empty(){
+         true => return Err(IndexError::IndexNotFound),
+         false => Ok(keys)
+      }
+   }
+}
+
+#[cfg(test)]
+mod tests{
+   use std::fs::File;
+
+   use crate::indexer;
+
+   use super::*;
+
+   fn initialize() -> DB{
+      let db = DB::open_default("./tmp").unwrap();
+      db
+   }
+
+   #[test]
+   fn putting_empty_json(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("empty_json.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      assert_eq!(data.put(body).unwrap_err(),IndexError::EmptyJson)
+   }
+
+   #[test]
+   fn putting_no_key(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("no_key.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      assert_eq!(data.put(body).unwrap_err(),IndexError::KeyNotFound)
+   }
+
+   #[test]
+   fn putting_no_body(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("json_key_only.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      assert_eq!(data.put(body).unwrap_err(),IndexError::ValueNotFound)
+   }
+
+   #[test]
+   fn putting(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      assert!(data.put(body).is_ok())
+   }
+
+   #[test]
+   fn getting_empty(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let _ = data.put(body).unwrap();
+      assert_eq!(data.get(String::from("999")).unwrap_err(),IndexError::KeyNotFound)
+   }
+
+   #[test]
+   fn getting(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let _ = data.put(body).unwrap();
+      assert!(data.get(String::from("5")).is_ok())
+   }
+
+   #[test]
+   fn deleting(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let _ = data.put(body).unwrap();
+      let _ = data.delete("5".to_string());
+      assert_eq!(data.get("5".to_string()).unwrap_err(),IndexError::KeyNotFound)
+   }
+
+   #[test]
+   fn searcing(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let _ = data.put(body).unwrap();
+      assert!(data.search("name".to_string(), "Ali".to_string()).is_ok())
+   }
+
+   #[test]
+   fn seaching_not_found(){
+      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
+      let file = File::open("example.json").unwrap();
+      let body: Value = serde_json::from_reader(file).unwrap();
+      let _ = data.put(body).unwrap();
+      assert_eq!(data.search("column".to_string(), "kkk".to_string()).unwrap_err(),IndexError::IndexNotFound)
    }
 }
