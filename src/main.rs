@@ -5,7 +5,7 @@ use serde_json::Value;
 use qstring::QString;
 
 mod indexer;
-use crate::indexer::{INDFunction,Indexer};
+use crate::indexer::{INDFunction, IndexError, Indexer};
 
 #[get("/search")]
 async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
@@ -14,9 +14,9 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
     let q = qs.into_pairs();
     let (column,index) = q.get(0).unwrap().to_owned();
     let mut json_map: Vec<HashMap<String,Value>> = Vec::new();
-    let keys = data.search(column,index);
+    let keys = data.search(column,index).unwrap();
     for key in keys {
-        let j = data.get(key);
+        let j = data.get(key).unwrap();
         json_map.push(j)
     }
     let json_entries = serde_json::to_string(&json_map).unwrap();
@@ -26,10 +26,10 @@ async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
 #[get("/key/{key}")]
 async fn get_by_key (key:Path<String>, data: Data<Indexer>) -> HttpResponse{
     let key = key.into_inner();
-    let j = data.get(key);
-    match j.is_empty(){
-        true => HttpResponse::NotFound().content_type("application/json").finish(),
-        false => HttpResponse::Ok().json(j)
+    match data.get(key){
+        Ok(j) => HttpResponse::Ok().json(j),
+        Err(IndexError::KeyNotFound) => HttpResponse::NotFound().content_type("application/json").finish(),
+        Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
     }
 }
 
@@ -42,9 +42,15 @@ async fn get_entries(data: Data<Indexer>) -> HttpResponse{
 #[put("/")]
 async fn put_entry(data: Data<Indexer>, body: web::Json::<Value>) -> HttpResponse{
     let body = body.into_inner();
-    let key = data.put(body);
-    let j = data.get(key);
-    HttpResponse::Ok().json(j)
+    match data.put(body){
+        Ok(key) => {
+            match data.get(key){
+                Ok(j) => return HttpResponse::Ok().json(j),
+                _ => return HttpResponse::InternalServerError().content_type("application/json").finish()
+            };
+        }
+        Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
+    }
 }
 
 #[delete("/remove/{key}")]
