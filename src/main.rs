@@ -43,12 +43,7 @@ async fn get_entries(data: Data<Indexer>) -> HttpResponse{
 async fn put_entry(data: Data<Indexer>, body: web::Json::<Value>) -> HttpResponse{
     let body = body.into_inner();
     match data.put(body){
-        Ok(key) => {
-            match data.get(key){
-                Ok(j) => return HttpResponse::Ok().json(j),
-                _ => return HttpResponse::InternalServerError().content_type("application/json").finish()
-            };
-        }
+        Ok(()) => HttpResponse::Ok().content_type("application/json").finish(),
         Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
     }
 }
@@ -62,7 +57,7 @@ async fn delete_entry (key: Path<String>,data: Data<Indexer>) -> HttpResponse{
 
 
 #[allow(deprecated)]
-#[tokio::main]
+#[actix_web::main]
 async fn main() -> std::io::Result<()>{
     let db=DB::open_default("./data").unwrap();
     let data: indexer::Indexer = indexer::INDFunction::init(db);
