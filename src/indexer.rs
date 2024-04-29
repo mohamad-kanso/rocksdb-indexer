@@ -7,7 +7,7 @@ pub trait INDFunction{
    fn init (data: DB) -> Self;
    fn get(&self, key:String) -> Result<HashMap<String,Value>,IndexError>;
    fn get_all(&self) -> Vec<HashMap<String,Value>>;
-   fn put(&self, body:Value) -> Result<String,IndexError>;
+   fn put(&self, body:Value) -> Result<(),IndexError>;
    fn delete(&self, key:String);
    fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError>;
 }
@@ -19,10 +19,8 @@ pub struct Indexer{
 
 #[derive(Debug,PartialEq)]
 pub enum IndexError {
-   EmptyJson,
+   InvalidInput,
    KeyNotFound,
-   ValueNotFound,
-   IndexNotFound,
 }
  
 impl INDFunction for Indexer{
@@ -90,17 +88,18 @@ impl INDFunction for Indexer{
       json_map
    }
    
-   fn put(&self,body: Value) -> Result<String,IndexError> {
+   #[allow(unused_assignments)]
+   fn put(&self,body: Value) -> Result<(),IndexError> {
       let mut key = String::new();
       match body.to_string() == "{}"{
-         true => return Err(IndexError::EmptyJson),
+         true => return Err(IndexError::InvalidInput),
          false => {}
       }
       let mut exist: bool= false;
       if let Value::Object(map) = body{
          match map.get("key"){
             Some(k) => {key = k.to_string();},
-            None => return Err(IndexError::KeyNotFound) 
+            None => return Err(IndexError::InvalidInput) 
          }
          let iter = self.db.prefix_iterator(format!("R.{}",key));
          for item in iter {
@@ -154,10 +153,10 @@ impl INDFunction for Indexer{
                   };
                }
             },
-            None => return Err(IndexError::ValueNotFound)
+            None => return Err(IndexError::InvalidInput)
          }
       }
-      Ok(key)
+      Ok(())
    }
 
    fn delete(&self, key:String){
@@ -185,7 +184,7 @@ impl INDFunction for Indexer{
          }
       }
       match keys.is_empty(){
-         true => return Err(IndexError::IndexNotFound),
+         true => return Err(IndexError::KeyNotFound),
          false => Ok(keys)
       }
    }
@@ -194,6 +193,7 @@ impl INDFunction for Indexer{
 #[cfg(test)]
 mod tests{
    use std::fs::File;
+   use rstest::rstest;
 
    use crate::indexer;
 
@@ -203,63 +203,44 @@ mod tests{
       let db = DB::open_default("./tmp").unwrap();
       db
    }
-
-   #[test]
-   fn putting_empty_json(){
+ 
+   #[rstest]
+   #[case("json_test_files/empty_json.json")]
+   #[case("json_test_files/json_key_only.json")]
+   #[case("json_test_files/no_key.json")]
+   fn putting_invalid_json(#[case] p: String){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("empty_json.json").unwrap();
+      let file = File::open(p).unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
-      assert_eq!(data.put(body).unwrap_err(),IndexError::EmptyJson)
-   }
-
-   #[test]
-   fn putting_no_key(){
-      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("no_key.json").unwrap();
-      let body: Value = serde_json::from_reader(file).unwrap();
-      assert_eq!(data.put(body).unwrap_err(),IndexError::KeyNotFound)
-   }
-
-   #[test]
-   fn putting_no_body(){
-      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_key_only.json").unwrap();
-      let body: Value = serde_json::from_reader(file).unwrap();
-      assert_eq!(data.put(body).unwrap_err(),IndexError::ValueNotFound)
+      assert_eq!(data.put(body).unwrap_err(),IndexError::InvalidInput)
    }
 
    #[test]
    fn putting(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
+      let file = File::open("json_test_files/example.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
-      assert!(data.put(body).is_ok())
+      assert!(data.put(body).is_ok());
+      assert!(data.get(String::from("5")).is_ok())
    }
 
    #[test]
    fn getting_empty(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
+      let file = File::open("json_test_files/example.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
+      assert!(data.get("5".to_string()).is_ok());
       assert_eq!(data.get(String::from("999")).unwrap_err(),IndexError::KeyNotFound)
-   }
-
-   #[test]
-   fn getting(){
-      let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
-      let body: Value = serde_json::from_reader(file).unwrap();
-      let _ = data.put(body).unwrap();
-      assert!(data.get(String::from("5")).is_ok())
    }
 
    #[test]
    fn deleting(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
+      let file = File::open("json_test_files/example.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
+      assert!(data.get("5".to_string()).is_ok());
       let _ = data.delete("5".to_string());
       assert_eq!(data.get("5".to_string()).unwrap_err(),IndexError::KeyNotFound)
    }
@@ -267,18 +248,20 @@ mod tests{
    #[test]
    fn searcing(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
+      let file = File::open("json_test_files/example.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
+      assert!(data.get("5".to_string()).is_ok());
       assert!(data.search("name".to_string(), "Ali".to_string()).is_ok())
    }
 
    #[test]
    fn seaching_not_found(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("example.json").unwrap();
+      let file = File::open("json_test_files/example.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
-      assert_eq!(data.search("column".to_string(), "kkk".to_string()).unwrap_err(),IndexError::IndexNotFound)
+      assert!(data.get("5".to_string()).is_ok());
+      assert_eq!(data.search("column".to_string(), "kkk".to_string()).unwrap_err(),IndexError::KeyNotFound)
    }
 }
