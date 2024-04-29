@@ -122,21 +122,17 @@ impl INDFunction for Indexer{
          match map.get("value") {
             Some(body) => if let Value::Object(object) = body{
                for (obj_k,obj_v) in object.into_iter(){
-                  println!("{obj_k}");
                   let db_key = format!("R.{}.{}",key,obj_k.to_string());
                   match obj_v{
                         Value::Null => {
-                           println!("got null value");
                            self.db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
                         },
                         Value::Bool(b) => {
-                           println!("got a bool");
                            self.db.put(format!("{}.b",db_key).as_bytes(), b.to_string()).expect("failed to put bool");
                            self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key).as_bytes(),"".as_bytes())
                               .expect("failed to put reverse bool index");
                         },
                         Value::Number(nb) => {
-                           println!("got a number");
                            self.db.put(format!("{}.n",db_key).as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
                               .expect("failed to save number to db");
                            self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),key)
@@ -144,7 +140,6 @@ impl INDFunction for Indexer{
                               .expect("failed to put reverse number index");
                         },
                         Value::String(str) => {
-                           println!("got string");
                            self.db.put(format!("{}.s",db_key).as_bytes(), str.to_string()).expect("failed to save string to db");
                            self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"".as_bytes())
                               .expect("failed to put reverse string index");
