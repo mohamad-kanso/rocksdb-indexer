@@ -45,7 +45,7 @@ impl INDFunction for Indexer{
                   json_one_entry.insert(column, serde_json::Value::String(value_str));
                },
                &"n" => {
-                  let value_n: f64 = f64::from_ne_bytes(v.into_vec().try_into().unwrap());
+                  let value_n: i64 = i64::from_ne_bytes(v.into_vec().try_into().unwrap());
                   json_one_entry.insert(column, value_n.into());
                },
                &"b" => {
@@ -125,23 +125,23 @@ impl INDFunction for Indexer{
                   let db_key = format!("R.{}.{}",key,obj_k.to_string());
                   match obj_v{
                         Value::Null => {
-                           self.db.put(db_key.as_bytes(), "".as_bytes()).expect("failed to put null value");
+                           self.db.put(db_key, "").expect("failed to put null value");
                         },
                         Value::Bool(b) => {
-                           self.db.put(format!("{}.b",db_key).as_bytes(), b.to_string()).expect("failed to put bool");
-                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key).as_bytes(),"".as_bytes())
+                           self.db.put(format!("{}.b",db_key), b.to_string()).expect("failed to put bool");
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),b.to_string(),key),"")
                               .expect("failed to put reverse bool index");
                         },
                         Value::Number(nb) => {
-                           self.db.put(format!("{}.n",db_key).as_bytes(), f64::to_ne_bytes(nb.as_f64().expect("failed to transform into f64")))
+                           self.db.put(format!("{}.n",db_key), i64::to_ne_bytes(nb.as_i64().expect("failed to transform into i64")))
                               .expect("failed to save number to db");
-                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_f64().expect("failed to convert f64 to byte"),key)
-                              .as_bytes(),"".as_bytes())
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),nb.as_i64().unwrap(),key)
+                              ,"")
                               .expect("failed to put reverse number index");
                         },
                         Value::String(str) => {
-                           self.db.put(format!("{}.s",db_key).as_bytes(), str.to_string()).expect("failed to save string to db");
-                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"".as_bytes())
+                           self.db.put(format!("{}.s",db_key), str.to_string()).expect("failed to save string to db");
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key),"")
                               .expect("failed to put reverse string index");
                         },
                         _ => {}
@@ -168,6 +168,7 @@ impl INDFunction for Indexer{
 
    fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError> {
       let search = format!("S.{}.{}", column, index);
+      println!("{:?}", search);
       let mut keys = vec![];
       let iter = self.db.prefix_iterator(search.as_bytes());
       for item in iter{
