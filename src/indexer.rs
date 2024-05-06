@@ -276,7 +276,7 @@ mod tests{
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
       assert!(data.get("5".to_string()).is_ok());
-      assert!(data.search("column".to_string(), "kkk".to_string()).unwrap().is_empty())
+      assert!(data.search("column".to_string(), "kkk".to_string()).is_err())
    }
 
    #[test]
