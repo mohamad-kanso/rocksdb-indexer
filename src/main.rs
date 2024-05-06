@@ -1,43 +1,31 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}, thread};
-use actix_web::{delete, get, web::{self, get, put, resource, Data, Path}, middleware::Logger, App, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{delete, get, middleware::Logger, post, web::{self, get, put, resource, Data, Path}, App, HttpResponse, HttpServer};
 use rocksdb::DB;
 use serde_json::Value;
-use qstring::QString;
 
 mod indexer;
 use crate::indexer::{INDFunction, IndexError, Indexer};
 
-#[get("/search")]
-async fn search_index (req: HttpRequest, data: Data<Indexer>) -> HttpResponse{
-    let query_str = req.query_string();
-    let qs = QString::from(query_str);
-    let q = qs.into_pairs();
-    let (column,index) = q.get(0).unwrap().to_owned();
-    let json_map: Arc<Mutex<Vec<HashMap<String,Value>>>> = Arc::new(Mutex::new(Vec::new()));
-    let keys = data.search(column,index).unwrap();
-    let num_workers = 4;
-    let mut tasks = Vec::with_capacity(num_workers);
-    let slice_size = keys.len()/num_workers;
-    for i in 0..num_workers{
-        let start = i * slice_size;
-        let end = start + slice_size;
-        let slice: Vec<String> = keys[start..end].to_vec();
-        let data = data.clone();
-        let json_map = json_map.clone();
-        let task = thread::spawn(move ||{
-            for key in slice{
-                let j = data.get(key).unwrap();
-                json_map.lock().unwrap().push(j)
-            }
-        });
-        tasks.push(task); 
+#[post("/search")]
+async fn search_index (body: web::Json::<Value>, data: Data<Indexer>) -> HttpResponse{
+    let query = body.into_inner();
+    let (mut column,mut index) = (String::new(),String::new());
+    if let Value::Object(map) = query{
+        match map.get("columnName"){
+            Some (c) => {column = c.to_string().replace('"', "");}
+            None => return HttpResponse::InternalServerError().finish(),
+        }
+        match map.get("value"){
+            Some (i) => {index = i.to_string().replace('"',"");}
+            None => return HttpResponse::InternalServerError().finish(),
+        }
     }
-    for task in tasks{
-        task.join().unwrap();
+    match data.search(column, index){
+        Ok(json_map) => {
+            let json_entries = serde_json::to_string(&json_map).unwrap();
+            HttpResponse::Ok().content_type("application/json").body(json_entries)
+        },
+        Err(_) => HttpResponse::InternalServerError().finish()
     }
-    let json_map = json_map.lock().unwrap().to_owned();
-    let json_entries = serde_json::to_string(&json_map).unwrap();
-    HttpResponse::Ok().content_type("application/json").body(json_entries)
 }
 
 #[get("/key/{key}")]
@@ -59,7 +47,7 @@ async fn get_entries(data: Data<Indexer>) -> HttpResponse{
 async fn put_entry(data: Data<Indexer>, body: web::Json::<Value>) -> HttpResponse{
     let body = body.into_inner();
     match data.put(body){
-        Ok(()) => HttpResponse::Ok().content_type("application/json").finish(),
+        Ok(()) => HttpResponse::Ok().content_type("application/json").body("data entry was succesful"),
         Err(_) => HttpResponse::InternalServerError().content_type("application/json").finish()
     }
 }
@@ -71,7 +59,6 @@ async fn delete_entry (key: Path<String>,data: Data<Indexer>) -> HttpResponse{
     get_entries(data).await
 }
 
-#[allow(deprecated)]
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
     let db=DB::open_default("./data").unwrap();
@@ -82,7 +69,7 @@ async fn main() -> std::io::Result<()>{
 
     HttpServer::new(move || {
         App::new()
-            .data(data.clone())
+            .app_data(Data::new(data.clone()))
             .wrap(Logger::default())
             .service(
                 resource("/")

@@ -1,6 +1,7 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 use rocksdb::DB;
 use serde_json::Value;
+use threadpool::ThreadPool;
 
 
 pub trait INDFunction{
@@ -9,7 +10,7 @@ pub trait INDFunction{
    fn get_all(&self) -> Vec<HashMap<String,Value>>;
    fn put(&self, body:Value) -> Result<(),IndexError>;
    fn delete(&self, key:String);
-   fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError>;
+   fn search(&self, column:String, index:String) -> Result<Vec<HashMap<String,Value>>,IndexError>;
 }
 
 #[derive(Clone)]
@@ -31,7 +32,7 @@ impl INDFunction for Indexer{
    fn get (&self, key:String) -> Result<HashMap<String,Value>,IndexError>{
       let index = format!("R.{}",key);
       let mut json_one_entry: HashMap<String,Value> = HashMap::new();
-      let iter = self.db.prefix_iterator(index);
+      let iter = self.db.prefix_iterator(index.as_bytes());
       for item in iter {
          let (k,v) = item.unwrap();
          if String::from_utf8(k.to_vec()).unwrap().starts_with(&format!("R.{}",key)){
@@ -141,7 +142,7 @@ impl INDFunction for Indexer{
                         },
                         Value::String(str) => {
                            self.db.put(format!("{}.s",db_key), str.to_string()).expect("failed to save string to db");
-                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key),"")
+                           self.db.put(format!("S.{}.{}.{}",obj_k.to_string(),str.to_string(),key).as_bytes(),"")
                               .expect("failed to put reverse string index");
                         },
                         _ => {}
@@ -166,9 +167,9 @@ impl INDFunction for Indexer{
       }
    }
 
-   fn search(&self, column:String, index:String) -> Result<Vec<String>,IndexError> {
+   fn search(&self, column:String, index:String) -> Result<Vec<HashMap<String,Value>>,IndexError> {
       let search = format!("S.{}.{}", column, index);
-      println!("{:?}", search);
+      println!("{}", search);
       let mut keys = vec![];
       let iter = self.db.prefix_iterator(search.as_bytes());
       for item in iter{
@@ -176,12 +177,29 @@ impl INDFunction for Indexer{
          if String::from_utf8(key.to_vec()).unwrap().starts_with(&search){
             let k_str: String = String::from_utf8(key.to_vec()).unwrap();
             let key_st: String = k_str.split('.').last().unwrap().to_string();
+            println!("{key_st}");
             keys.push(key_st);
          }
       }
-      match keys.is_empty(){
+      let json_map: Arc<Mutex<Vec<HashMap<String,Value>>>> = Arc::new(Mutex::new(Vec::new()));
+      let num_workers = 4;
+      let pool = ThreadPool::new(num_workers);
+      for key in keys{
+         println!("{key}");
+         let data = self.clone();
+         let json_map = json_map.clone();
+         pool.execute(move || {
+            match data.get(key){
+               Ok(j) => {json_map.lock().unwrap().push(j)},
+               Err(_) => {panic!()}
+            };
+         });
+      }
+      pool.join();     
+      let json_map = json_map.lock().unwrap().to_owned();
+      match json_map.is_empty(){
          true => return Err(IndexError::KeyNotFound),
-         false => Ok(keys)
+         false => Ok(json_map)
       }
    }
 }
@@ -214,7 +232,7 @@ mod tests{
    #[test]
    fn putting(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_test_files/example.json").unwrap();
+      let file = File::open("json_test_files/example1.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       assert!(data.put(body).is_ok());
       assert!(data.get(String::from("5")).is_ok())
@@ -223,7 +241,7 @@ mod tests{
    #[test]
    fn getting_empty(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_test_files/example.json").unwrap();
+      let file = File::open("json_test_files/example1.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
       assert!(data.get("5".to_string()).is_ok());
@@ -233,7 +251,7 @@ mod tests{
    #[test]
    fn deleting(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_test_files/example.json").unwrap();
+      let file = File::open("json_test_files/example1.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
       assert!(data.get("5".to_string()).is_ok());
@@ -244,7 +262,7 @@ mod tests{
    #[test]
    fn searcing(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_test_files/example.json").unwrap();
+      let file = File::open("json_test_files/example1.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
       assert!(data.get("5".to_string()).is_ok());
@@ -254,10 +272,31 @@ mod tests{
    #[test]
    fn seaching_not_found(){
       let data: indexer::Indexer = indexer::INDFunction::init(initialize());
-      let file = File::open("json_test_files/example.json").unwrap();
+      let file = File::open("json_test_files/example1.json").unwrap();
       let body: Value = serde_json::from_reader(file).unwrap();
       let _ = data.put(body).unwrap();
       assert!(data.get("5".to_string()).is_ok());
-      assert_eq!(data.search("column".to_string(), "kkk".to_string()).unwrap_err(),IndexError::KeyNotFound)
+      assert!(data.search("column".to_string(), "kkk".to_string()).unwrap().is_empty())
+   }
+
+   #[test]
+   fn searching_1_letter(){
+      let data:indexer::Indexer = indexer::INDFunction::init(initialize());
+      let mut files: Vec<File> = Vec::new();
+      files.push(File::open("json_test_files/example1.json").unwrap());
+      files.push(File::open("json_test_files/example2.json").unwrap());
+      files.push(File::open("json_test_files/example3.json").unwrap());
+      for file in files {
+         let body: Value = serde_json::from_reader(file).unwrap();
+         let _ = data.put(body.clone()).unwrap();
+         assert!(data.get(body.get("key").unwrap().to_string()).is_ok());
+      }
+      let s = data.search("name".to_owned(), "A".to_owned());
+      assert!(s.is_ok());
+      let s = s.unwrap();
+      for item in s{
+         println!("{}",item.get("name").unwrap().to_string().replace('"', ""));
+         assert!(item.get("name").unwrap().to_string().replace('"', "").starts_with('A'));
+      }
    }
 }
